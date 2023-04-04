@@ -241,3 +241,4 @@ fabric.properties
 
 /bot/configs/.env
 /bot/audio/*
+/.idea
