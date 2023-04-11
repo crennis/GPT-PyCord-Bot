@@ -85,42 +85,32 @@ class SetupModal(discord.ui.Modal):
         embed.add_field(name="GPT", value=self.children[2].value)
         embed.add_field(name="System Message", value=self.children[3].value)
 
-        await interaction.response.send_message(embeds=[embed], ephemeral=True)
-
+        # Check if Server is in DB
         if await dbm.get_server_by_id(interaction.guild.id) is None:
-            print("Server not in DB")
             await dbm.add_server(interaction.guild.id)
-            await dbm.add_channel(interaction.guild.id, self.children[0].value)
-            if dbm.is_premium(interaction.guild.id):
-                await dbm.add_config(interaction.guild.id, self.children[0].value, self.children[1].value, self.children[2].value, self.children[3].value)
-            else:
-                await dbm.add_config(interaction.guild.id, self.children[0].value, 3, self.children[2].value, self.children[3].value)
-            await dbm.add_summary_zero(interaction.guild.id, self.children[0].value)
-            await dbm.default_premium(interaction.guild.id)
-            print("Setup: Server")
+            print("Added Server to DB")
 
-        elif await dbm.get_server_by_id(interaction.guild.id) is not None and await dbm.get_channel_by_id(interaction.guild.id, self.children[0].value) is None:
-            print("Server in DB, but Channel not")
-            await dbm.add_channel(interaction.guild.id, self.children[0].value)
-            if dbm.is_premium(interaction.guild.id):
-                await dbm.add_config(interaction.guild.id, self.children[0].value, self.children[1].value, self.children[2].value, self.children[3].value)
-            else:
-                await dbm.add_config(interaction.guild.id, self.children[0].value, 3, self.children[2].value, self.children[3].value)
-
-            await dbm.add_summary_zero(interaction.guild.id, self.children[0].value)
-            print("Setup: Channel, Config")
-
-        elif await dbm.get_server_by_id(interaction.guild.id) is not None and await dbm.get_channel_by_id(interaction.guild.id, self.children[0].value) is not None:
-            print("Server and Channel in DB, rerun Setup")
+        # Check if Channel is already in DB. If so delete old config
+        if await dbm.get_channel_by_id(interaction.guild.id, self.children[0].value) is not None:
             await dbm.remove_channel(interaction.guild.id, self.children[0].value)
             await dbm.remove_config(interaction.guild.id, self.children[0].value)
+            print("Removed old Channel from DB")
+
+        # Check if Channel is in DB. If not add it
+        if await dbm.get_channel_by_id(interaction.guild.id, self.children[0].value) is None:
+            print("Added Channel to DB")
             await dbm.add_channel(interaction.guild.id, self.children[0].value)
-            if dbm.is_premium(interaction.guild.id):
+
+            # Check for "Premium"
+            if await dbm.is_premium(interaction.guild.id):
                 await dbm.add_config(interaction.guild.id, self.children[0].value, self.children[1].value, self.children[2].value, self.children[3].value)
             else:
-                await dbm.add_config(interaction.guild.id, self.children[0].value, 3, self.children[2].value, self.children[3].value)
+                await dbm.add_config(interaction.guild.id, self.children[0].value, self.children[1], "3", self.children[3].value)
+
             await dbm.add_summary_zero(interaction.guild.id, self.children[0].value)
-            print("Setup: Channel, Config")
+
+        await interaction.response.send_message(embeds=[embed], ephemeral=True)
+
 
 ### Add Modal
 class AddModal(discord.ui.Modal):
@@ -131,43 +121,40 @@ class AddModal(discord.ui.Modal):
         self.add_item(discord.ui.InputText(label="System Message", placeholder="System Message", required=False, style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction):
+
+        print(f"Server-Type: {type(interaction.guild.id)}"
+                  f"Channel-Type: {type(interaction.channel.id)}"
+                  f"Prefix-Type: {type(self.children[0].value)}"
+                    f"GPT-Type: {type(self.children[1].value)}"
+                    f"System-Type: {type(self.children[2].value)}")
+
+        # Check if Server is in DB
         if await dbm.get_server_by_id(interaction.guild.id) is None:
-            print("Server not in DB")
             await dbm.add_server(interaction.guild.id)
-            await dbm.add_channel(interaction.guild.id, interaction.channel.id)
-            if dbm.is_premium(interaction.guild.id):
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, self.children[1].value, self.children[2].value)
-            else:
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, 3, self.children[2].value)
-            await dbm.add_summary_zero(interaction.guild.id, interaction.channel.id)
-            print("Setup: Channel, Server, Config")
-        elif await dbm.get_server_by_id(interaction.guild.id) is not None and await dbm.get_channel_by_id(interaction.guild.id, interaction.channel.id) is None:
-            await dbm.add_channel(interaction.guild.id, interaction.channel.id)
-            if dbm.is_premium(interaction.guild.id):
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value,
-                                     self.children[1].value, self.children[2].value)
-            else:
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, 3,
-                                     self.children[2].value)
-            await dbm.add_summary_zero(interaction.guild.id, interaction.channel.id)
-            print("Setup: Channel, Config")
-        elif await dbm.get_server_by_id(interaction.guild.id) is not None and await dbm.get_channel_by_id(interaction.guild.id, interaction.channel.id) is not None:
+            print("Added Server to DB")
+
+        # Check if Channel is already in DB. If so delete old config
+        if await dbm.get_channel_by_id(interaction.guild.id, interaction.channel.id) is not None:
             await dbm.remove_channel(interaction.guild.id, interaction.channel.id)
             await dbm.remove_config(interaction.guild.id, interaction.channel.id)
-            if dbm.is_premium(interaction.guild.id):
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value,
-                                     self.children[1].value, self.children[2].value)
-            else:
-                await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, 3,
-                                     self.children[2].value)
-            await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, self.children[1].value, self.children[2].value)
-            await dbm.add_summary_zero(interaction.guild.id, interaction.channel.id)
-            print("Setup: Channel, Config")
+            print("Removed old Channel from DB")
 
-        if dbm.is_premium(interaction.guild.id):
-            await interaction.response.send_message('Setup Channel', ephemeral=True)
+        # Check if Channel is in DB. If not add it
+        if await dbm.get_channel_by_id(interaction.guild.id, interaction.channel.id) is None:
+            await dbm.add_channel(interaction.guild.id, interaction.channel.id)
+            print("Added Channel to DB")
+
+        # Check for "Premium"
+        if await dbm.is_premium(interaction.guild.id):
+            await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, self.children[1].value, self.children[2].value)
+            print(f"Added with Premium-Permission {self.children[1].value}")
         else:
-            await interaction.response.send_message('Setup Channel (Using GPT-3.5)', ephemeral=True)
+            await dbm.add_config(interaction.guild.id, interaction.channel.id, self.children[0].value, "3", self.children[2].value)
+            print(f"Added without Premium-Permission 3")
+
+        await dbm.add_summary_zero(interaction.guild.id, interaction.channel.id)
+        await interaction.response.send_message("Configured Channel", ephemeral=True)
+
 
 ### Edit Modal
 class EditSystemModal(discord.ui.Modal):
@@ -196,11 +183,8 @@ async def setup(ctx: discord.ApplicationContext):
 @bot.command(name="add", description="Used to add Bot answering to specific Channels")
 @commands.has_permissions(administrator=True)
 async def add(ctx: discord.ApplicationContext):
-    if await dbm.get_channel_by_id(ctx.guild.id, ctx.channel.id) is None:
-        modal = AddModal(title="Add Channel")
-        await ctx.send_modal(modal)
-    else:
-        await ctx.respond("Channel has already been added. Use /setup", ephemeral=True)
+    modal = AddModal(title="Add Channel")
+    await ctx.send_modal(modal)
 
 
 @bot.command(name="remove", description="Used to remove Bot answering to specific Channels")
@@ -208,16 +192,10 @@ async def add(ctx: discord.ApplicationContext):
 async def remove(ctx: discord.ApplicationContext):
     if await dbm.get_channel_by_id(ctx.guild.id, ctx.channel.id) is not None:
         await dbm.remove_channel(ctx.guild.id, ctx.channel.id)
+        await dbm.remove_config(ctx.guild.id, ctx.channel.id)
         await ctx.respond("Channel removed", ephemeral=True)
     else:
         await ctx.respond("Channel not active. Nothing Done", ephemeral=True)
-
-
-@bot.command(name="list", description="Used to list all Channels in the Server")
-@commands.has_permissions(administrator=True)
-async def list(ctx: discord.ApplicationContext):
-
-        await ctx.respond("This command is WIP")
 
 
 @bot.command(name="clear", description="Used to clear chat history of specific Channels/Users")
@@ -226,11 +204,6 @@ async def clear(ctx: discord.ApplicationContext):
     await dbm.add_summary_zero(ctx.guild.id, ctx.channel.id)
     await ctx.respond("Bot got Amnesia", ephemeral=True)
 
-# Old System, Rewrite needed
-@bot.command(name="help", description="Used to get help")
-async def help(ctx: discord.ApplicationContext):
-    await ctx.respond(f'Here is a list of all commands:\n'
-                        'Needs Rewrite\n', ephemeral=True)
 
 @bot.command(name="ping", description="Used to check if the bot is alive")
 async def ping(ctx: discord.ApplicationContext):

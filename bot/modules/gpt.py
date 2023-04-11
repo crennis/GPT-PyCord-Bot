@@ -60,10 +60,10 @@ async def get_answer(server_id=0, channel_id=0, mode=0, msg=''):
     if mode == 0: ### Normal Mode
         gptversion = await dbm.get_config_by_id(server_id, channel_id)
         gptversion = gptversion[3]
-        if gptversion == 3:
-            usemodel = "gpt-3.5-turbo"
-        elif gptversion == 4:
+        if int(gptversion) == 4:
             usemodel = "gpt-4"
+        else:
+            usemodel = "gpt-3.5-turbo"
 
         history = await load_history(server_id, channel_id, 0)
 

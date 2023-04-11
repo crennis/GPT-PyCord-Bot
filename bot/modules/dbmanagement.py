@@ -22,7 +22,7 @@ async def init_db():
                 (server_id TEXT,
                 channel_id TEXT,
                 prefix TEXT,
-                gpt INTEGER,
+                gpt TEXT,
                 systemmsg TEXT,
                 FOREIGN KEY(server_id) REFERENCES servers(id),
                 FOREIGN KEY(channel_id) REFERENCES channels(id))'''
@@ -56,9 +56,8 @@ async def init_db():
 
 async def add_server(server_id):
     async with aiosqlite.connect(DB_FILE) as db:
-        await db.execute('INSERT OR IGNORE INTO servers (server_id) VALUES (?)', (server_id,))
+        await db.execute('INSERT INTO servers (server_id, is_premium) VALUES (?, ?)', (server_id, 0))
         await db.commit()
-
 
 async def remove_server(server_id):
     async with aiosqlite.connect(DB_FILE) as db:
@@ -125,9 +124,9 @@ async def get_channel_by_id(server_id, channel_id):
         return channel
 
 async def add_config(server_id, channel_id, prefix, gpt, systemmsg):
-    msg = f'Users are named like this: Username#1234 the #1234 is an identifier and can be ignored. {systemmsg}'
+    msg = f'You are talking to multiple users and can see their usernames. Usernames are named like this: Username#1234 the #1234 is an identifier and can be ignored. You do not add a username to your message. {systemmsg}'
     async with aiosqlite.connect(DB_FILE) as db:
-        await db.execute('INSERT OR IGNORE INTO config (server_id, channel_id, prefix, gpt, systemmsg) VALUES (?, ?, ?, ?, ?)', (server_id, channel_id, prefix, gpt, msg))
+        await db.execute('INSERT OR IGNORE INTO config (server_id, channel_id, prefix, gpt, systemmsg) VALUES (?, ?, ?, ?, ?)', (server_id, channel_id, str(prefix), str(gpt), str(msg)))
         await db.commit()
 
 async def remove_config(server_id, channel_id):
