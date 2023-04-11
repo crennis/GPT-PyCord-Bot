@@ -8,9 +8,12 @@ This is a Discord Bot that Uses OpenAI's new Chat API-Endpoint to generate text 
 
 This Bot uses the PyCord Library ([PyCord](https://pycord.dev/)) and the OpenAI Python Library ([OpenAI](https://platform.openai.com/docs/libraries))
 
-There are two ways to use this bot:
+There are three ways to use this bot:
 
-Using Docker or without Docker.
+1. By just inviting [this Bot](https://discord.com/api/oauth2/authorize?client_id=1083786070786850959&permissions=2147486720&scope=bot) to your Server
+
+2. Using Docker
+3. Without using Docker
 
 ### The No Docker Way
 

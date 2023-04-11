@@ -1,7 +1,11 @@
-import modules.gpt as gpt
 import json
 import os
-import asyncio
+try:
+    import dbmanagement as dbm
+    import gpt
+except:
+    import modules.dbmanagement as dbm
+    import modules.gpt as gpt
 
 folder = 'chats'
 async def summarize(id):
@@ -32,3 +36,12 @@ async def summarize(id):
     os.remove(os.path.join(folder, '199.json'))
 
     return summarised
+
+async def new_summarize(server_id, channel_id):
+    ### Get
+    print(f'new_summarize called with {server_id} and {channel_id}')
+    history = await gpt.load_history(server_id, channel_id, 1)
+    summary = await gpt.get_answer(mode=1, msg=history)
+    msgpoint = await dbm.get_last_chat(server_id, channel_id)
+    msgpoint = msgpoint[8]
+    await dbm.add_summary(server_id, channel_id, summary, msgpoint-10)
