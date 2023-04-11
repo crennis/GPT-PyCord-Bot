@@ -67,7 +67,7 @@ Once the Bot is running and you have invited it to your Server, you can use the 
 - /setup - Same as Add, but you can change the Channel ID
 - /remove - Removes the current Channel from the Bot
 - /clear - Clears the Message History used by the Bot. Does not remove Messages from Discord, only from the Bot
-- /system - Opens a Dialog to change the System-Messege set to the Bot. More in OpenAI's Docs
+- /system - Opens a Dialog to change the System-Messege set to the Bot. More in [OpenAI's Docs](https://platform.openai.com/docs/guides/chat/instructing-chat-models)
 - /ping - Checks if the Bot is responding
 
 ### How to Contribute
